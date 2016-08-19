@@ -1,5 +1,6 @@
 import Vapor
 import VaporMustache
+import VaporSQLite
 
 
 /**
@@ -15,12 +16,12 @@ let mustache = VaporMustache.Provider(withIncludes: [
 
 /**
     Xcode defaults to a working directory in
-    a temporary build folder. 
-    
+    a temporary build folder.
+
     In order for Vapor to access Resources and
     Configuration files, the working directory
     must be the root directory of your project.
- 
+
     This can also be achieved by passing
     --workDir=$(SRCROOT) in the Xcode arguments
     or setting the root directory manually in:
@@ -43,6 +44,10 @@ let workDir: String?
 */
 let drop = Droplet(workDir: workDir, providers: [mustache])
 
+drop.get("hello") { request in
+    return "Hello, world"
+}
+
 /**
     Vapor configuration files are located
     in the root directory of the project
@@ -61,13 +66,17 @@ let _ = drop.config["app", "key"].string ?? ""
     view to any request to the root directory of the website.
 
     Views referenced with `app.view` are by default assumed
-    to live in <workDir>/Resources/Views/ 
+    to live in <workDir>/Resources/Views/
 
     You can override the working directory by passing
     --workDir to the application upon execution.
 */
-drop.get("/") { request in
-    return try drop.view("welcome.html")
+drop.get("/") {request in
+    return try drop.view("index.mustache")
+}
+
+drop.get("test") {request in
+    return try drop.view("testing.html")
 }
 
 /**
@@ -75,7 +84,7 @@ drop.get("/") { request in
     any JSON data type (String, Int, Dict, etc)
     in JSON() and returning it.
 
-    Types can be made convertible to JSON by 
+    Types can be made convertible to JSON by
     conforming to JsonRepresentable. The User
     model included in this example demonstrates this.
 
@@ -127,7 +136,7 @@ drop.get("data", Int.self) { request, int in
 }
 
 /**
-    Here's an example of using type-safe routing to ensure 
+    Here's an example of using type-safe routing to ensure
     only requests to "posts/<some-integer>" will be handled.
 
     String is the most general and will match any request
@@ -151,7 +160,9 @@ drop.get("posts", Int.self) { request, postId in
 */
 
 let users = UserController(droplet: drop)
+let tasks = TaskController(droplet: drop)
 drop.resource("users", users)
+drop.resource("tasks", tasks)
 
 /**
     VaporMustache hooks into Vapor's view class to
@@ -166,7 +177,7 @@ drop.get("mustache") { request in
 
 /**
     A custom validator definining what
-    constitutes a valid name. Here it is 
+    constitutes a valid name. Here it is
     defined as an alphanumeric string that
     is between 5 and 20 characters.
 */
@@ -261,13 +272,13 @@ drop.get("localization", String.self) { request, lang in
 }
 
 /**
-    Middleware is a great place to filter 
-    and modifying incoming requests and outgoing responses. 
+    Middleware is a great place to filter
+    and modifying incoming requests and outgoing responses.
 
     Check out the middleware in App/Middleware.
 
     You can also add middleware to a single route by
-    calling the routes inside of `app.middleware(MiddlewareType) { 
+    calling the routes inside of `app.middleware(MiddlewareType) {
         app.get() { ... }
     }`
 */
